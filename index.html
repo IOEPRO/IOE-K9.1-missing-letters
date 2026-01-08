@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài tập điền từ còn thiếu IOE K9.1</title>
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      body { 
+        font-family: 'Nunito', sans-serif; 
+        overflow-x: hidden; 
+        background-color: #f8fafc; 
+        margin: 0;
+      }
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      
+      @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
+      .animate-fade-in { animation: fadeIn 0.15s ease-out forwards; }
+      
+      @keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      .animate-slide-up { animation: slideUp 0.2s ease-out forwards; }
+      
+      @keyframes bounceShort { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+      .animate-bounce-short { animation: bounceShort 1s infinite; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+<body class="antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef, useMemo } = React;
+
+      // --- CONSTANTS & TYPES ---
+      const QuestionType = {
+        MULTIPLE_CHOICE: 'MC',
+        FILL_IN_BLANK: 'FIB',
+        REARRANGE: 'RE'
+      };
+
+      const GameState = {
+        START: 'START',
+        PLAYING: 'PLAYING',
+        FINISHED: 'FINISHED'
+      };
+
+      // Full Dataset IOE K9.1 - Merged from all provided lists
+      const QUIZ_DATA = [
+        { id: 1, type: QuestionType.FILL_IN_BLANK, questionText: "Twenty-seven plus nineteen equals _ _ _ _ _ -six.", correctAnswer: "forty", explanation: "Dịch: Hai mươi bảy cộng mười chín bằng bốn mươi sáu (46)." },
+        { id: 2, type: QuestionType.FILL_IN_BLANK, questionText: "Maria is not t_ _ _ enough to reach the shelf.", correctAnswer: "all", explanation: "Dịch: Maria không đủ cao (tall) để với tới cái giá." },
+        { id: 3, type: QuestionType.FILL_IN_BLANK, questionText: "Thirty-two plus forty-_ _ _ _ equals seventy-seven.", correctAnswer: "five", explanation: "Dịch: Ba mươi hai cộng bốn mươi lăm (five) bằng bảy mươi bảy (77)." },
+        { id: 4, type: QuestionType.FILL_IN_BLANK, questionText: "They spent 2 hours tal_ _ _ _ on the phone.", correctAnswer: "king", explanation: "Dịch: Họ đã dành 2 tiếng để nói chuyện (talking) điện thoại." },
+        { id: 5, type: QuestionType.FILL_IN_BLANK, questionText: "You need a lot of self-_ _ _ cipline when doing everything on your own.", correctAnswer: "dis", explanation: "Dịch: Bạn cần sự kỷ luật (self-discipline) khi tự làm mọi thứ." },
+        { id: 6, type: QuestionType.FILL_IN_BLANK, questionText: "The flight was too long so I get really bad jet _ _ _ .", correctAnswer: "lag", explanation: "Dịch: Chuyến bay quá dài nên tôi bị mệt mỏi sau chuyến bay dài (jet lag)." },
+        { id: 7, type: QuestionType.FILL_IN_BLANK, questionText: "Mr. Thanh took _ _ er with the day-to-day running of the company.", correctAnswer: "ov", explanation: "Dịch: Ông Thành đã tiếp quản (took over) việc điều hành công ty." },
+        { id: 8, type: QuestionType.FILL_IN_BLANK, questionText: "After World Cup 2022, many people consider Messi the great_ _ _ football player.", correctAnswer: "est", explanation: "Dịch: Sau World Cup 2022, nhiều người coi Messi là cầu thủ vĩ đại nhất (greatest)." },
+        { id: 9, type: QuestionType.FILL_IN_BLANK, questionText: "_ _ _ you use to cook dinner for your family?", correctAnswer: "Did", explanation: "Dịch: Bạn đã (Did) từng nấu bữa tối cho gia đình mình à?" },
+        { id: 10, type: QuestionType.FILL_IN_BLANK, questionText: "Eighty-six minus thirty-five equals _ _ _ _ _ -one.", correctAnswer: "fifty", explanation: "Dịch: Tám mươi sáu trừ ba mươi lăm bằng năm mươi mốt (51)." },
+        { id: 11, type: QuestionType.FILL_IN_BLANK, questionText: "K_ _ _ _ _ _ up with the fashion is thought to be expensive.", correctAnswer: "eeping", explanation: "Dịch: Theo kịp (Keeping up) thời trang được cho là rất tốn kém." },
+        { id: 12, type: QuestionType.FILL_IN_BLANK, questionText: "They used _ _ go fishing in the lake near their house.", correctAnswer: "to", explanation: "Dịch: Họ đã từng (used to) đi câu cá ở cái hồ gần nhà." },
+        { id: 13, type: QuestionType.FILL_IN_BLANK, questionText: "Eighty-six minus _ _ _ _ _ _ -nine equals fifty-seven.", correctAnswer: "twenty", explanation: "Dịch: Tám mươi sáu trừ hai mươi chín bằng năm mươi bảy (57)." },
+        { id: 14, type: QuestionType.FILL_IN_BLANK, questionText: "Her dress was covered with beautiful _ _ _ roidery.", correctAnswer: "emb", explanation: "Dịch: Chiếc váy của cô ấy được thêu (embroidery) rất đẹp." },
+        { id: 15, type: QuestionType.FILL_IN_BLANK, questionText: "The town has many int_ _ _ sting places to offer to the tourists.", correctAnswer: "ere", explanation: "Dịch: Thị trấn có nhiều địa điểm thú vị (interesting) cho khách du lịch." },
+        { id: 16, type: QuestionType.FILL_IN_BLANK, questionText: "Can you recom_ _ _ _ a place of interest in your neighbourhood?", correctAnswer: "mend", explanation: "Dịch: Bạn có thể đề xuất (recommend) một địa điểm thú vị gần đây không?" },
+        { id: 17, type: QuestionType.FILL_IN_BLANK, questionText: " Henna designs for celeb_ _ _ _ _ _ s such as weddings.", correctAnswer: "ration", explanation: "Dịch: Các thiết kế Henna cho các lễ kỷ niệm (celebrations) như đám cưới." },
+        { id: 18, type: QuestionType.FILL_IN_BLANK, questionText: "She provided emotio_ _ _ support at a very distressing time for me.", correctAnswer: "nal", explanation: "Dịch: Cô ấy đã hỗ trợ tinh thần (emotional) cho tôi vào lúc khó khăn." },
+        { id: 19, type: QuestionType.FILL_IN_BLANK, questionText: "Although they never get angry, they are not always kind or to_ _ rant.", correctAnswer: "le", explanation: "Dịch: Mặc dù họ không bao giờ giận, họ không phải lúc nào cũng khoan dung (tolerant)." },
+        { id: 20, type: QuestionType.FILL_IN_BLANK, questionText: "Nam lives in a nu_ _ _ _ _ family.", correctAnswer: "clear", explanation: "Dịch: Nam sống trong một gia đình hạt nhân (nuclear family)." },
+        { id: 21, type: QuestionType.FILL_IN_BLANK, questionText: "Wealthy noblemen wore wigs to make them_ _ _ _ _ _ attractive.", correctAnswer: "selves", explanation: "Dịch: Các quý tộc đội tóc giả để làm bản thân (themselves) lôi cuốn." },
+        { id: 22, type: QuestionType.FILL_IN_BLANK, questionText: "When Arnold got tired of _ _ _ _ _ _ , he went into politics. (ACT)", correctAnswer: "acting", explanation: "Dịch: Khi Arnold thấy chán diễn xuất (acting), ông ấy chuyển sang chính trị." },
+        { id: 23, type: QuestionType.FILL_IN_BLANK, questionText: "Christian Dior was a French fashion d_ _ _ _ _ _ _ .", correctAnswer: "esigner", explanation: "Dịch: Christian Dior là một nhà thiết kế (designer) thời trang người Pháp." },
+        { id: 24, type: QuestionType.FILL_IN_BLANK, questionText: "Contrary _ _ the weather forecast, it was a sunny day.", correctAnswer: "to", explanation: "Dịch: Trái ngược với (Contrary to) dự báo thời tiết, hôm nay trời nắng." },
+        { id: 25, type: QuestionType.FILL_IN_BLANK, questionText: "My mother complained about not _ _ _ _ _ _ enough time.", correctAnswer: "having", explanation: "Dịch: Mẹ tôi phàn nàn về việc không có (having) đủ thời gian." },
+        { id: 26, type: QuestionType.FILL_IN_BLANK, questionText: "He is a notorious _ _ _ _ _ _ _ _ who robbed a bank. (crime)", correctAnswer: "criminal", explanation: "Dịch: Hắn ta là một tên tội phạm (criminal) khét tiếng." },
+        { id: 27, type: QuestionType.FILL_IN_BLANK, questionText: "_ _ _ _ _ gen is a chemical element; it has symbol H.", correctAnswer: "Hydro", explanation: "Dịch: Hydro (Hydrogen) là một nguyên tố hóa học, ký hiệu là H." },
+        { id: 28, type: QuestionType.FILL_IN_BLANK, questionText: "_ _ _ _ _ _ _ _ _ _ _ _ _ , the market opens at night. (TRADITION)", correctAnswer: "traditionally", explanation: "Dịch: Theo truyền thống (traditionally), chợ mở cửa vào ban đêm." },
+        { id: 29, type: QuestionType.FILL_IN_BLANK, questionText: "Ann suffered from a number of _ _ _ _ _ _ _ _ _ problems. (emotion)", correctAnswer: "emotional", explanation: "Dịch: Ann chịu đựng nhiều vấn đề cảm xúc (emotional)." },
+        { id: 30, type: QuestionType.FILL_IN_BLANK, questionText: "They had a strong _ _ _ _ _ _ _ _ _ _ _ _ . (agreement)", correctAnswer: "disagreement", explanation: "Dịch: Họ đang cãi nhau vì có sự bất đồng (disagreement) mạnh mẽ." },
+        { id: 31, type: QuestionType.FILL_IN_BLANK, questionText: "He lives in the French Alps near the Swiss _ _ _ _ _ _ . (border)", correctAnswer: "border", explanation: "Dịch: Anh ấy sống gần biên giới (border) Thụy Sĩ." },
+        { id: 32, type: QuestionType.FILL_IN_BLANK, questionText: "I think _ _ _ _ _ g fun of others is really mean.", correctAnswer: "makin", explanation: "Dịch: Tôi nghĩ việc chế nhạo (making fun of) người khác là rất hèn hạ." },
+        { id: 33, type: QuestionType.FILL_IN_BLANK, questionText: "Show teenagers that you _ _ _ pect their privacy.", correctAnswer: "res", explanation: "Dịch: Hãy cho thiếu niên thấy bạn tôn trọng (respect) sự riêng tư." },
+        { id: 34, type: QuestionType.FILL_IN_BLANK, questionText: "WALL-E won the Academy Award for _ _ _ _ animated film.", correctAnswer: "best", explanation: "Dịch: WALL-E đã giành giải Oscar cho phim hoạt hình hay nhất (best)." },
+        { id: 35, type: QuestionType.FILL_IN_BLANK, questionText: "_ _ _ _ _ _ _ ate people are unable to read and write.", correctAnswer: "Illiter", explanation: "Dịch: Người mù chữ (Illiterate) không thể đọc hay viết." },
+        { id: 36, type: QuestionType.FILL_IN_BLANK, questionText: "I'll be ha_ _ y to give you a lift to school.", correctAnswer: "pp", explanation: "Dịch: Mình rất vui (happy) khi được cho bạn đi nhờ." },
+        { id: 37, type: QuestionType.FILL_IN_BLANK, questionText: "The milkman brings bottles of milk _ _ my family.", correctAnswer: "to", explanation: "Dịch: Người đưa sữa mang sữa tới (to) gia đình tôi." },
+        { id: 38, type: QuestionType.FILL_IN_BLANK, questionText: "Zoe comes _ _ _ _ Australia.", correctAnswer: "from", explanation: "Dịch: Zoe đến từ (from) nước Úc." },
+        { id: 39, type: QuestionType.FILL_IN_BLANK, questionText: "The question is not whe_ _ _ _ it will erupt again; but when.", correctAnswer: "ther", explanation: "Dịch: Câu hỏi không phải là liệu (whether) nó có phun trào lại không." },
+        { id: 40, type: QuestionType.FILL_IN_BLANK, questionText: "Located in the _ _ _ tre of Japan, Mount Fuji is a sacred site.", correctAnswer: "cen", explanation: "Dịch: Nằm ở trung tâm (centre) Nhật Bản." },
+        { id: 41, type: QuestionType.FILL_IN_BLANK, questionText: "Daisy agreed _ _ _ _ her friend about this issue.", correctAnswer: "with", explanation: "Dịch: Daisy đồng ý với (with) bạn của cô ấy." },
+        { id: 42, type: QuestionType.FILL_IN_BLANK, questionText: "The spoons are made _ _ _ _ metal.", correctAnswer: "from", explanation: "Dịch: Những chiếc thìa được làm từ (from) kim loại." },
+        { id: 43, type: QuestionType.FILL_IN_BLANK, questionText: "We have seen the movie tw_ _ _ this week.", correctAnswer: "ice", explanation: "Dịch: Chúng tôi đã xem phim này 2 lần (twice)." },
+        { id: 44, type: QuestionType.FILL_IN_BLANK, questionText: "The boss lets the workers lis_ _ _ to music.", correctAnswer: "ten", explanation: "Dịch: Sếp cho phép công nhân nghe (listen) nhạc." },
+        { id: 45, type: QuestionType.FILL_IN_BLANK, questionText: "The treasure hunt game is aimed at _ _ _ _ -building skills.", correctAnswer: "team", explanation: "Dịch: Cải thiện kỹ năng xây dựng đội ngũ (team-building)." },
+        { id: 46, type: QuestionType.FILL_IN_BLANK, questionText: "If I _ _ _ _ you, I would follow the instruction.", correctAnswer: "were", explanation: "Dịch: Nếu tôi là bạn (If I were you)." },
+        { id: 47, type: QuestionType.FILL_IN_BLANK, questionText: "It was not un_ _ _ I had to live on my own that I was independent.", correctAnswer: "til", explanation: "Dịch: Phải cho đến khi (until) tự sống một mình." },
+        { id: 48, type: QuestionType.FILL_IN_BLANK, questionText: "_ _ _ _ _ _ plus fifty-six equals seventy-six.", correctAnswer: "twenty", explanation: "Dịch: Hai mươi (20) cộng 56 bằng 76." },
+        { id: 49, type: QuestionType.FILL_IN_BLANK, questionText: "Hung little balls bet_ _ _ _ children's eyes.", correctAnswer: "ween", explanation: "Dịch: Treo ở giữa (between) mắt trẻ em." },
+        { id: 50, type: QuestionType.FILL_IN_BLANK, questionText: "_ _ _ _ _ _ _ _ is the last month of the year.", correctAnswer: "December", explanation: "Dịch: Tháng Mười hai (December)." },
+        { id: 51, type: QuestionType.FILL_IN_BLANK, questionText: "Be careful not to cut your finger while sl_ _ _ _ _ the cucumber.", correctAnswer: "icing", explanation: "Dịch: Cẩn thận khi thái lát (slicing)." },
+        { id: 52, type: QuestionType.FILL_IN_BLANK, questionText: "When the students ret_ _ _ ed from the trip, they felt tired.", correctAnswer: "urn", explanation: "Dịch: Khi học sinh trở về (returned) từ chuyến đi." },
+        { id: 53, type: QuestionType.FILL_IN_BLANK, questionText: "An _ _ _ _ _ _ _ _ _ _ number of adults live independently. (INCREASE)", correctAnswer: "increasing", explanation: "Dịch: Số lượng ngày càng tăng (increasing)." },
+        { id: 54, type: QuestionType.FILL_IN_BLANK, questionText: "The test has scores for ver_ _ _ skills.", correctAnswer: "bal", explanation: "Dịch: Kỹ năng ngôn ngữ (verbal skills)." },
+        { id: 55, type: QuestionType.FILL_IN_BLANK, questionText: "At the age of 90, she lives _ _ _ _ _ _ _ _ _ _ _ _ _ . (DEPEND)", correctAnswer: "independently", explanation: "Dịch: Bà ấy vẫn sống độc lập (independently)." },
+        { id: 56, type: QuestionType.FILL_IN_BLANK, questionText: "Patients may be charged _ _ _ missed appointments.", correctAnswer: "for", explanation: "Dịch: Bị tính phí cho (for) cuộc hẹn lỡ." },
+        { id: 57, type: QuestionType.FILL_IN_BLANK, questionText: "The Statue of Liberty was made in F_ _ _ _ _ .", correctAnswer: "rance", explanation: "Dịch: Tượng Nữ thần Tự do làm ở Pháp (France)." },
+        { id: 58, type: QuestionType.FILL_IN_BLANK, questionText: "Reality TV has been a successful form of _ _ _ _ _ _ _ _ _ _ _ _ _ . (entertain)", correctAnswer: "entertainment", explanation: "Dịch: Hình thức giải trí (entertainment) thành công." },
+        { id: 59, type: QuestionType.FILL_IN_BLANK, questionText: "The newspaper experienced a _ _ _ _ _ _ _ decrease. (GRADUALLY)", correctAnswer: "gradual", explanation: "Dịch: Sự sụt giảm dần dần (gradual)." },
+        { id: 60, type: QuestionType.FILL_IN_BLANK, questionText: "This is the m_ _ _ delicious cake I have ever tasted.", correctAnswer: "ost", explanation: "Dịch: Bánh ngon nhất (most delicious)." },
+        { id: 61, type: QuestionType.FILL_IN_BLANK, questionText: "An_ _ _ is often caused by frustration. (ANGER)", correctAnswer: "ger", explanation: "Dịch: Sự tức giận (Anger)." },
+        { id: 62, type: QuestionType.FILL_IN_BLANK, questionText: "Anna is a great _ _ _ _ _ _ _ _ _ . She sang beautifully. (PERFORM)", correctAnswer: "performer", explanation: "Dịch: Người biểu diễn (performer) tuyệt vời." },
+        { id: 63, type: QuestionType.FILL_IN_BLANK, questionText: "Remember to talk _ _ out your problems with your family.", correctAnswer: "ab", explanation: "Dịch: Nói về (talk about) vấn đề của bạn." },
+        { id: 64, type: QuestionType.FILL_IN_BLANK, questionText: "We bought a bottle of water from the _ _ _ _ _ _ _ machine.", correctAnswer: "vending", explanation: "Dịch: Máy bán hàng (vending machine) tự động." },
+        { id: 65, type: QuestionType.FILL_IN_BLANK, questionText: "Teen stress is even wor_ _ than that of adults.", correctAnswer: "se", explanation: "Dịch: Căng thẳng tệ hơn (worse)." },
+        { id: 66, type: QuestionType.FILL_IN_BLANK, questionText: "Walt Disney b_ _ _ _ _ famous when he created Mickey.", correctAnswer: "ecame", explanation: "Dịch: Trở nên (became) nổi tiếng." },
+        { id: 67, type: QuestionType.FILL_IN_BLANK, questionText: "Obstacles pre_ _ _ _ _ _ _ children from accessing education.", correctAnswer: "venting", explanation: "Dịch: Ngăn cản (preventing) trẻ em." },
+        { id: 68, type: QuestionType.FILL_IN_BLANK, questionText: "Ha Long Bay is in Quang Ninh Prov_ _ _ _ .", correctAnswer: "ince", explanation: "Dịch: Vịnh Hạ Long ở tỉnh (Province) Quảng Ninh." },
+        { id: 69, type: QuestionType.FILL_IN_BLANK, questionText: "The man gave me a bottle _ _ water.", correctAnswer: "of", explanation: "Dịch: Một chai (of) nước." },
+        { id: 70, type: QuestionType.FILL_IN_BLANK, questionText: "South America produces many of the _ _ _ _ admired players.", correctAnswer: "most", explanation: "Dịch: Những cầu thủ được ngưỡng mộ nhất (most)." },
+        { id: 71, type: QuestionType.FILL_IN_BLANK, questionText: "Reaching the top in _ _ _ _ _ to stand on Fuji's summit.", correctAnswer: "order", explanation: "Dịch: Để (in order to) đứng trên đỉnh núi Phú Sĩ." },
+        { id: 72, type: QuestionType.FILL_IN_BLANK, questionText: "Europe has the largest number of foot_ _ _ _ players.", correctAnswer: "ball", explanation: "Dịch: Cầu thủ bóng đá (football)." },
+        { id: 73, type: QuestionType.FILL_IN_BLANK, questionText: "The handicraft w_ _ _ shops needed more workers.", correctAnswer: "ork", explanation: "Dịch: Các xưởng làm (workshops) đồ thủ công." },
+        { id: 74, type: QuestionType.FILL_IN_BLANK, questionText: "I bought the shirt in the super_ _ _ ket.", correctAnswer: "mar", explanation: "Dịch: Siêu thị (supermarket)." },
+        { id: 75, type: QuestionType.FILL_IN_BLANK, questionText: "Hadrian’s Wall is _ _ ancient wall across England.", correctAnswer: "an", explanation: "Dịch: Một (an) bức tường cổ." },
+        { id: 76, type: QuestionType.FILL_IN_BLANK, questionText: "My father _ _ _ _ to ride his bike when he was young.", correctAnswer: "used", explanation: "Dịch: Đã từng (used to)." },
+        { id: 77, type: QuestionType.FILL_IN_BLANK, questionText: "Europe's clubs have supporters all over the _ _ _ _ _ .", correctAnswer: "world", explanation: "Dịch: Khắp thế giới (world)." },
+        { id: 78, type: QuestionType.FILL_IN_BLANK, questionText: "I wo_ _ _ like to have a cup of hot tea, please.", correctAnswer: "uld", explanation: "Dịch: Tôi muốn (would like) một tách trà." },
+        { id: 79, type: QuestionType.FILL_IN_BLANK, questionText: "My father was always pa_ _ ent when I could not do homework.", correctAnswer: "ti", explanation: "Dịch: Kiên nhẫn (patient)." },
+        { id: 80, type: QuestionType.FILL_IN_BLANK, questionText: "Jessie wasn't nervous because she wasn't aw_ _ _ of the problem.", correctAnswer: "are", explanation: "Dịch: Nhận thức được (aware of)." },
+        { id: 81, type: QuestionType.FILL_IN_BLANK, questionText: "Be careful while cutting as the knife is really sh_ _ _ .", correctAnswer: "arp", explanation: "Dịch: Sắc bén (sharp)." },
+        { id: 82, type: QuestionType.FILL_IN_BLANK, questionText: "The children _ _ _ _ _ _ _ their grandparents last Sunday. (visit)", correctAnswer: "visited", explanation: "Dịch: Đã thăm (visited) ông bà." },
+        { id: 83, type: QuestionType.FILL_IN_BLANK, questionText: "Skin protects us _ _ _ _ a variety of external forces.", correctAnswer: "from", explanation: "Dịch: Bảo vệ chúng ta khỏi (from)." },
+        { id: 84, type: QuestionType.FILL_IN_BLANK, questionText: "Unemployment rate is increa_ _ _ g.", correctAnswer: "sin", explanation: "Dịch: Đang tăng lên (increasing)." },
+        { id: 85, type: QuestionType.FILL_IN_BLANK, questionText: "Studies suggest that good-l_ _ _ _ _ _ people make more money.", correctAnswer: "ooking", explanation: "Dịch: Những người có ngoại hình ưa nhìn (good-looking)." },
+        { id: 86, type: QuestionType.FILL_IN_BLANK, questionText: "The making process needs tasks such as ch_ _ sing fabric.", correctAnswer: "oo", explanation: "Dịch: Chọn (choosing) vải." },
+        { id: 87, type: QuestionType.FILL_IN_BLANK, questionText: "An error has _ _ _ _ _ _ _ _ in the script. (OCCUR)", correctAnswer: "occurred", explanation: "Dịch: Một lỗi đã xảy ra (occurred)." },
+        { id: 88, type: QuestionType.FILL_IN_BLANK, questionText: "What did ancient people do to en_ _ _ _ _ in themselves?", correctAnswer: "terta", explanation: "Dịch: Giải trí (entertain)." },
+        { id: 89, type: QuestionType.FILL_IN_BLANK, questionText: "The number of undergraduates has increased _ _ _ _ _ _ _ _ _ _ _ _ . (DRAMATIC)", correctAnswer: "dramatically", explanation: "Dịch: Tăng đáng kể (dramatically)." },
+        { id: 90, type: QuestionType.FILL_IN_BLANK, questionText: "Giant pandas arr_ _ _ _ at the National Zoological Park.", correctAnswer: "ived", explanation: "Dịch: Đã đến (arrived)." },
+        { id: 91, type: QuestionType.FILL_IN_BLANK, questionText: "Paintings dating b_ _ _ over 4,000 years.", correctAnswer: "ack", explanation: "Dịch: Có từ (dating back)." },
+        { id: 92, type: QuestionType.FILL_IN_BLANK, questionText: "Illustration shows examples of _ _ _ _ _ _ _ _ _ _ _ dress. (fashion)", correctAnswer: "fashionable", explanation: "Dịch: Thời trang (fashionable)." },
+        { id: 93, type: QuestionType.FILL_IN_BLANK, questionText: "My mom bought 2 k_ _ _ _ of beef.", correctAnswer: "ilos", explanation: "Dịch: Cân (kilos)." },
+        { id: 94, type: QuestionType.FILL_IN_BLANK, questionText: "Chua Keo is a _ _ _ _ _ _ pagoda built 400 years ago. (wood)", correctAnswer: "wooden", explanation: "Dịch: Chùa gỗ (wooden)." },
+        { id: 95, type: QuestionType.FILL_IN_BLANK, questionText: "This book will teach you how to c_ _ _ with stress.", correctAnswer: "ope", explanation: "Dịch: Đối mặt (cope) với căng thẳng." },
+        { id: 96, type: QuestionType.FILL_IN_BLANK, questionText: "The Perfume pagoda attracts thousands of pil_ _ _ _ s.", correctAnswer: "grim", explanation: "Dịch: Khách hành hương (pilgrims)." },
+        { id: 97, type: QuestionType.FILL_IN_BLANK, questionText: "G_ _ _ _ is the sauce made from meat juices.", correctAnswer: "ravy", explanation: "Dịch: Nước sốt thịt (Gravy)." }
+      ];
+
+      // --- SHARED COMPONENTS ---
+      const Button = ({ children, variant = 'primary', className = '', ...props }) => {
+        const variants = {
+          primary: "bg-blue-600 text-white shadow-md active:bg-blue-700",
+          secondary: "bg-emerald-500 text-white shadow-md active:bg-emerald-600",
+          danger: "bg-rose-500 text-white shadow-md active:bg-rose-600",
+          outline: "bg-white border-2 border-slate-200 text-slate-600 active:bg-slate-50"
+        };
+        return (
+          <button className={`px-5 py-3 rounded-2xl font-black transition-all active:scale-95 disabled:opacity-30 ${variants[variant]} ${className}`} {...props}>
+            {children}
+          </button>
+        );
+      };
+
+      const QuestionCard = ({ question, onAnswer, isAnswered, userAnswer }) => {
+        const [inputVal, setInputVal] = useState('');
+        const [showHint, setShowHint] = useState(false);
+        
+        const normalize = (s) => s ? s.replace(/[.,!?;:'"()]/g, '').replace(/\s+/g, ' ').trim().toLowerCase() : "";
+        const isCorrect = userAnswer && normalize(userAnswer) === normalize(question.correctAnswer);
+
+        useEffect(() => { setInputVal(''); setShowHint(false); }, [question.id]);
+
+        const getHintText = () => {
+          let firstChar = question.correctAnswer.trim().charAt(0).toUpperCase();
+          let meaning = "";
+          const match = question.explanation.match(/Dịch:\s*([^.]*)/);
+          if (match && match[1]) meaning = match[1].trim();
+          
+          return (
+            <div className="space-y-1">
+              <p>🔤 Ký tự đầu: <span className="text-blue-700 font-black">"{firstChar}"</span></p>
+              {meaning && <p>🇻🇳 Nghĩa: <span className="text-emerald-700 font-bold">{meaning}</span></p>}
+            </div>
+          );
+        };
+
+        const handleKeyDown = (e) => {
+          if (e.key === 'Enter' && !isAnswered) {
+            if (inputVal.trim()) {
+              onAnswer(inputVal.trim());
+            }
+          }
+        };
+
+        return (
+          <div className="w-full max-w-2xl mx-auto animate-fade-in">
+            <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-200 p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="px-3 py-0.5 bg-blue-100 text-blue-700 rounded-xl text-[10px] font-black uppercase tracking-tighter">IOE K9.1</span>
+                {!isAnswered && (
+                  <button onClick={() => setShowHint(!showHint)} className="text-[10px] font-black bg-amber-50 text-amber-700 px-3 py-0.5 rounded-lg border border-amber-100">
+                    💡 {showHint ? 'ẨN GỢI Ý' : 'XEM GỢI Ý'}
+                  </button>
+                )}
+              </div>
+
+              {showHint && !isAnswered && (
+                <div className="mb-3 bg-amber-50 p-3 rounded-xl text-base font-bold text-amber-900 border border-amber-100 animate-slide-up">
+                  {getHintText()}
+                </div>
+              )}
+
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-6 leading-tight text-center sm:text-left">
+                {question.questionText}
+              </h2>
+
+              <div className="space-y-4">
+                <input type="text" autoFocus value={isAnswered ? userAnswer : inputVal} onChange={(e) => setInputVal(e.target.value)} 
+                  onKeyDown={handleKeyDown} disabled={isAnswered}
+                  className={`w-full p-4 rounded-3xl border-4 text-3xl sm:text-4xl font-black text-center outline-none ${isAnswered ? (isCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-rose-500 bg-rose-50 text-rose-800') : 'border-slate-100 bg-slate-50 focus:border-blue-500 focus:bg-white'}`}
+                  placeholder="..." />
+                {!isAnswered && <Button onClick={() => inputVal.trim() && onAnswer(inputVal.trim())} className="w-full text-2xl py-4 !rounded-3xl">XÁC NHẬN (ENTER)</Button>}
+              </div>
+
+              {isAnswered && (
+                <div className={`mt-5 p-4 rounded-3xl border-l-[12px] shadow-xl animate-fade-in ${isCorrect ? 'bg-emerald-50 border-emerald-500' : 'bg-rose-50 border-rose-500'}`}>
+                  <div className="flex gap-4 items-start">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-white text-2xl font-black shadow-lg ${isCorrect ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+                      {isCorrect ? '✓' : '✕'}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className={`font-black text-xl mb-1 ${isCorrect ? 'text-emerald-800' : 'text-rose-800'}`}>{isCorrect ? 'XUẤT SẮC!' : 'CHƯA ĐÚNG!'}</h3>
+                      {!isCorrect && (
+                        <div className="mb-2 p-3 bg-white/80 rounded-xl border-2 border-rose-100">
+                          <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-0.5">ĐÁP ÁN ĐÚNG:</p> 
+                          <p className="font-black text-slate-900 text-xl leading-none">{question.correctAnswer}</p>
+                        </div>
+                      )}
+                      <p className="text-base font-bold text-slate-600 leading-snug">
+                        <span className="font-black text-blue-600 uppercase text-xs mr-2 tracking-tighter">GIẢI THÍCH:</span>
+                        {question.explanation}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+      const QuestionGrid = ({ questions, userAnswers, currentIndex, onJump, onClose }) => (
+        <div className="fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-2 animate-fade-in">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col border-4 border-white animate-slide-up">
+            <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+              <h2 className="text-xl font-black text-slate-800 uppercase">MỤC LỤC</h2>
+              <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-slate-200 rounded-xl font-black">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 grid grid-cols-5 sm:grid-cols-10 gap-1.5 custom-scrollbar">
+              {questions.map((q, idx) => {
+                const ans = userAnswers.find(a => a.questionId === q.id);
+                let color = "bg-slate-100 text-slate-400 border-transparent";
+                if (idx === currentIndex) color = "ring-4 ring-blue-500 bg-white text-blue-600 scale-105 z-10 border-blue-500";
+                else if (ans) color = ans.isCorrect ? "bg-emerald-500 text-white border-emerald-600" : "bg-rose-500 text-white border-rose-600";
+                return (
+                  <button key={q.id} onClick={() => onJump(idx)} className={`h-11 w-11 rounded-xl font-black text-sm border-2 transition-all active:scale-90 ${color}`}>
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+
+      const StartScreen = ({ onStart }) => {
+        const [name, setName] = useState('');
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-blue-600 p-4">
+            <div className="bg-white rounded-[3rem] shadow-2xl p-10 max-w-md w-full text-center animate-slide-up">
+              <h1 className="text-4xl font-black text-slate-800 mb-3 tracking-tighter uppercase leading-tight">Bài tập điền từ còn thiếu IOE K9.1</h1>
+              <p className="text-slate-400 font-black mb-8 uppercase tracking-[0.3em] text-xs">AI MASTER EDUCATION</p>
+              <form onSubmit={(e) => { e.preventDefault(); name.trim() && onStart(name); }} className="space-y-5">
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="TÊN BẠN" required
+                  className="w-full px-6 py-5 rounded-3xl border-4 border-slate-100 text-3xl font-black text-center outline-none focus:border-blue-500 transition-all uppercase" />
+                <Button type="submit" className="w-full text-2xl py-5 !rounded-3xl shadow-blue-500/40">BẮT ĐẦU ÔN</Button>
+              </form>
+            </div>
+          </div>
+        );
+      };
+
+      const ResultScreen = ({ userName, userAnswers, onRetryAll, onRetryWrong }) => {
+        const correctCount = userAnswers.filter(a => a.isCorrect).length;
+        const totalCount = QUIZ_DATA.length;
+        const percent = Math.round((correctCount / totalCount) * 100);
+        const wrongAnswers = userAnswers.filter(a => !a.isCorrect);
+
+        return (
+          <div className="min-h-screen bg-slate-100 p-2 flex flex-col items-center py-6 overflow-y-auto">
+            <div className="bg-white rounded-[3rem] shadow-2xl p-6 sm:p-10 max-w-2xl w-full text-center border-4 border-white animate-fade-in mb-6">
+              <div className="text-7xl font-black text-blue-600 mb-2 leading-none">{percent}%</div>
+              <h2 className="text-3xl font-black text-slate-800 mb-8 uppercase tracking-tighter">KẾT QUẢ</h2>
+              
+              <div className="grid grid-cols-2 gap-3 mb-10">
+                <div className="bg-emerald-50 p-6 rounded-3xl border-2 border-emerald-100">
+                  <div className="text-5xl font-black text-emerald-600">{correctCount}</div>
+                  <div className="text-xs font-black uppercase text-emerald-700 tracking-widest">ĐÚNG</div>
+                </div>
+                <div className="bg-rose-50 p-6 rounded-3xl border-2 border-rose-100">
+                  <div className="text-5xl font-black text-rose-500">{QUIZ_DATA.length - correctCount}</div>
+                  <div className="text-xs font-black uppercase text-rose-700 tracking-widest">SAI / BỎ QUA</div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button onClick={onRetryAll} className="flex-1 text-2xl py-5 !rounded-3xl">ÔN LẠI TẤT CẢ</Button>
+                {wrongAnswers.length > 0 && <Button onClick={onRetryWrong} variant="danger" className="flex-1 text-2xl py-5 !rounded-3xl">ÔN LẠI CÂU SAI</Button>}
+              </div>
+            </div>
+
+            {wrongAnswers.length > 0 && (
+              <div className="w-full max-w-2xl animate-slide-up pb-10">
+                <h3 className="text-xl font-black text-slate-700 mb-4 px-4 uppercase tracking-tight flex items-center gap-2">
+                  <span className="text-rose-500">❌</span> DANH SÁCH CÂU SAI:
+                </h3>
+                <div className="space-y-4">
+                  {wrongAnswers.map((ans, i) => {
+                    const q = QUIZ_DATA.find(x => x.id === ans.questionId);
+                    return (
+                      <div key={i} className="bg-white p-6 rounded-[2rem] border-2 border-rose-100 shadow-lg relative overflow-hidden group hover:border-blue-200 transition-colors">
+                         <div className="flex justify-between items-center mb-3">
+                           <span className="text-xs font-black bg-rose-100 text-rose-700 px-3 py-1 rounded-xl">CÂU #{q.id}</span>
+                         </div>
+                         <p className="text-xl font-black text-slate-800 mb-4 leading-tight">{q.questionText}</p>
+                         
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                           <div className="p-3 bg-rose-50/50 rounded-2xl border border-rose-100">
+                             <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">BẠN ĐIỀN:</p>
+                             <p className="text-lg font-black text-rose-900">{ans.userResponse || "(Bỏ trống)"}</p>
+                           </div>
+                           <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                             <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">ĐÁP ÁN ĐÚNG:</p>
+                             <p className="text-lg font-black text-emerald-900">{q.correctAnswer}</p>
+                           </div>
+                         </div>
+                         
+                         <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                           <p className="text-sm font-bold text-slate-700 leading-relaxed">
+                             <span className="text-blue-600 font-black uppercase text-xs mr-2">GIẢI THÍCH:</span>
+                             {q.explanation}
+                           </p>
+                         </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      // --- APP ROOT ---
+      const App = () => {
+        const [gameState, setGameState] = useState(GameState.START);
+        const [userName, setUserName] = useState('');
+        const [activeQuestions, setActiveQuestions] = useState(QUIZ_DATA);
+        const [currentIndex, setCurrentIndex] = useState(0);
+        const [userAnswers, setUserAnswers] = useState([]);
+        const [showGrid, setShowGrid] = useState(false);
+
+        const handleAnswer = (response) => {
+          const q = activeQuestions[currentIndex];
+          const normalize = (s) => s.replace(/[.,!?;:'"()]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+          const isCorrect = normalize(response) === normalize(q.correctAnswer);
+          setUserAnswers(prev => [...prev.filter(a => a.questionId !== q.id), { questionId: q.id, userResponse: response, isCorrect }]);
+        };
+
+        if (gameState === GameState.START) return <StartScreen onStart={(name) => { setUserName(name); setGameState(GameState.PLAYING); }} />;
+        if (gameState === GameState.FINISHED) return <ResultScreen userName={userName} userAnswers={userAnswers} 
+          onRetryAll={() => { setActiveQuestions(QUIZ_DATA); setCurrentIndex(0); setUserAnswers([]); setGameState(GameState.PLAYING); }}
+          onRetryWrong={() => { const wrongIds = userAnswers.filter(a => !a.isCorrect).map(a => a.questionId); setActiveQuestions(QUIZ_DATA.filter(q => wrongIds.includes(q.id))); setCurrentIndex(0); setUserAnswers([]); setGameState(GameState.PLAYING); }} />;
+
+        const currentQ = activeQuestions[currentIndex];
+        const answer = userAnswers.find(a => a.questionId === currentQ.id);
+        const isAnswered = !!answer;
+        const currentScore = userAnswers.filter(a => a.isCorrect).length * 10;
+
+        return (
+          <div className="min-h-screen bg-slate-50 flex flex-col items-center p-2 pb-24">
+            <div className="w-full max-w-2xl flex justify-between items-center bg-white p-2 rounded-2xl shadow-sm border border-slate-200 mb-2">
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-600 text-white p-2 rounded-xl text-lg">👤</div>
+                <p className="text-base font-black text-slate-800 hidden sm:block truncate max-w-[120px] uppercase leading-none">{userName}</p>
+              </div>
+              <div className="flex gap-4 items-center">
+                <div className="text-center leading-none">
+                  <p className="text-[10px] font-black text-slate-400 tracking-tighter uppercase">ĐIỂM</p>
+                  <p className="text-2xl font-black text-emerald-600">{currentScore}</p>
+                </div>
+                <div className="h-8 w-px bg-slate-100"></div>
+                <div className="text-center leading-none">
+                  <p className="text-[10px] font-black text-slate-400 tracking-tighter uppercase">CÂU</p>
+                  <p className="text-2xl font-black text-blue-600">{currentIndex + 1}/{activeQuestions.length}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowGrid(true)} className="px-3 py-2 bg-blue-600 text-white rounded-xl text-xs font-black shadow-lg">📋 MỤC LỤC</button>
+            </div>
+            
+            <div className="w-full max-w-2xl bg-slate-200 h-2 rounded-full mb-2 overflow-hidden shadow-inner">
+              <div className="bg-blue-600 h-full transition-all duration-300" style={{ width: `${((currentIndex + 1)/activeQuestions.length)*100}%` }}></div>
+            </div>
+
+            <QuestionCard question={currentQ} onAnswer={handleAnswer} isAnswered={isAnswered} userAnswer={answer?.userResponse} />
+
+            <div className="fixed bottom-0 left-0 right-0 p-2 bg-white/95 backdrop-blur-md border-t shadow-lg z-50 flex justify-center">
+              <div className="w-full max-w-2xl flex gap-2 items-center">
+                <Button onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))} variant="outline" disabled={currentIndex === 0} className="!py-3 !px-4 text-xl">←</Button>
+                <div className="flex-1 flex justify-center">
+                  {isAnswered ? (
+                    <Button onClick={() => currentIndex === activeQuestions.length - 1 ? setGameState(GameState.FINISHED) : setCurrentIndex(currentIndex+1)} className="w-full !py-4 text-2xl !rounded-2xl animate-bounce-short">
+                      {currentIndex === activeQuestions.length - 1 ? 'KẾT THÚC ✔' : 'TIẾP THEO →'}
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2 w-full">
+                      <Button onClick={() => setCurrentIndex(Math.min(activeQuestions.length-1, currentIndex+1))} variant="outline" className="flex-1 !py-3 text-lg text-slate-400 uppercase">BỎ QUA</Button>
+                      <Button onClick={() => window.confirm("Nộp bài ngay?") && setGameState(GameState.FINISHED)} variant="danger" className="flex-1 !py-3 text-lg uppercase font-black">NỘP BÀI</Button>
+                    </div>
+                  )}
+                </div>
+                <Button onClick={() => setCurrentIndex(Math.min(activeQuestions.length-1, currentIndex+1))} variant="outline" disabled={currentIndex === activeQuestions.length-1 || isAnswered} className="!py-3 !px-4 text-xl">→</Button>
+              </div>
+            </div>
+
+            {showGrid && <QuestionGrid questions={activeQuestions} userAnswers={userAnswers} currentIndex={currentIndex} onJump={(i) => { setCurrentIndex(i); setShowGrid(false); }} onClose={() => setShowGrid(false)} />}
+          </div>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+</body>
+</html>
